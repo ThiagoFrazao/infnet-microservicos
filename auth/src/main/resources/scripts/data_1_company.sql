@@ -1,0 +1,1 @@
+insert into COMPANY (name) VALUES ('Adventure');
