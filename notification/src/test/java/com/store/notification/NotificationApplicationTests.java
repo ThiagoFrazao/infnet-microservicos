@@ -1,4 +1,4 @@
-package com.store.order;
+package com.store.notification;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

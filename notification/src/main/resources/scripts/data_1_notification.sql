@@ -1,0 +1,1 @@
+insert into NOTIFICATION (status) VALUES ('SEND');
