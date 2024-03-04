@@ -1,2 +1,0 @@
-INSERT INTO "USER" (company_id, username, email, password, role) VALUES (1, 'Thiago Frazao', 'thiago.frasao@gmail.com', '123456789', 'ADMIN');
-INSERT INTO "USER" (company_id, username, email, password, role) VALUES (1, 'Godofredo da Silva', 'godofredosilva123@gmail.com', '123456789', 'ADMIN');
