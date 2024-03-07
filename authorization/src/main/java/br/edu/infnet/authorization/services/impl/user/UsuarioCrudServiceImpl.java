@@ -1,10 +1,12 @@
 package br.edu.infnet.authorization.services.impl.user;
 
 import br.edu.infnet.authorization.domain.Usuario;
+import br.edu.infnet.authorization.dto.request.PasswordRecoverQueueDto;
 import br.edu.infnet.authorization.dto.request.UsuarioRequest;
 import br.edu.infnet.authorization.repository.UsuarioRepository;
 import br.edu.infnet.authorization.services.impl.GenericCrudServiceImpl;
 import br.edu.infnet.authorization.services.interfaces.UsuarioGenericService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -18,16 +20,19 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
     private final PasswordEncoder passwordEncoder;
     private final AmqpTemplate rabbitTemplate;
 
-    @Value("${rabbitmq.exchange.name}")
+    @Value("${rabbit.exchange.name}")
     private String exchange;
 
-    @Value("${rabbitmq.routing.key}")
+    @Value("${rabbit.routing.key}")
     private String routingKey;
+
+    private final ObjectMapper objectMapper;
 
     protected UsuarioCrudServiceImpl(UsuarioRepository repository, PasswordEncoder passwordEncoder, AmqpTemplate rabbitTemplate) {
         super(repository);
         this.passwordEncoder = passwordEncoder;
         this.rabbitTemplate = rabbitTemplate;
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -101,12 +106,27 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
             if(usuario == null) {
                 throw new RuntimeException("Usuario nao encontrado para email %s".formatted(email));
             } else {
-                this.rabbitTemplate.convertAndSend(exchange, routingKey, usuario.getSenha());
+                this.rabbitTemplate.convertAndSend(
+                        this.exchange,
+                        this.routingKey,
+                        this.objectMapper.writeValueAsString(new PasswordRecoverQueueDto(email, this.gerarConteudoRecuperacaoSenha(usuario), this.gerarTituloRecuperacaoSenha(usuario))));
             }
         } catch (Exception e) {
             //FIXME: implementar exception
             throw new RuntimeException("ALTERAR");
         }
+    }
+
+    private String gerarConteudoRecuperacaoSenha(Usuario usuario) {
+        return "<h1>Atenção %s </h1>".formatted(usuario.getNome()) +
+                "<p>Foi solicitada a alteração de senha para o seu email.</p>" +
+                "<p>Se você não solicitou essa alteração entre em contato.</p>" +
+                "<p>Se você solicitou clique no link abaixo</p>" +
+                "<a href=\"https://www.google.com\" target=\"_blank\">Recuperar senha</a>";
+    }
+
+    private String gerarTituloRecuperacaoSenha(Usuario usuario) {
+        return "Recuperacao email para %s".formatted(usuario.getNome());
     }
 
 
