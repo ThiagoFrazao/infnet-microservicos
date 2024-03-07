@@ -33,8 +33,12 @@ public class UsuarioController  {
     public ResponseEntity<List<UsuarioResponse>> findAll() {
         return ResponseEntity.ok(this.service.findAll().stream().map(UsuarioResponse::new).toList());
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<UsuarioResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(new UsuarioResponse(this.service.findById(id)));
+    }
 
-    @GetMapping("/{email}")
+    @GetMapping("/email/{email}")
     public ResponseEntity<UsuarioResponse> findByEmail(@PathVariable String email) {
         return ResponseEntity.ok(new UsuarioResponse(this.service.findByEmail(email)));
     }
