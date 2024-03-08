@@ -50,12 +50,12 @@ public class RabbitMqConfig {
 
     @Bean
     public Queue notifyOrderQueue() {
-        return new Queue(this.recoverPasswordQueue);
+        return new Queue(this.notifyOrderQueue);
     }
 
     @Bean
     public TopicExchange notifyOrderTopicExchange() {
-        return new TopicExchange(this.recoverPasswordExchange);
+        return new TopicExchange(this.notifyOrderExchange);
     }
 
     @Bean
