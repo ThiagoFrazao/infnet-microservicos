@@ -8,6 +8,8 @@ import br.edu.infnet.products.services.interfaces.ProdutoGenericService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @Slf4j
 public class ProdutoCrudServiceImpl extends GenericCrudServiceImpl<Produto, Long, ProdutoRepository> implements ProdutoGenericService {
@@ -27,6 +29,15 @@ public class ProdutoCrudServiceImpl extends GenericCrudServiceImpl<Produto, Long
             produto.setValor(novoProduto.getValor());
             produto.setNome(novoProduto.getNome());
             return this.save(novoProduto);
+        }
+    }
+
+    @Override
+    public List<Produto> recuperarProdutosPorId(List<Long> idProdutos) {
+        if(idProdutos == null || idProdutos.isEmpty()) {
+            return this.repository.findAll();
+        } else {
+            return this.repository.findAllById(idProdutos);
         }
     }
 
