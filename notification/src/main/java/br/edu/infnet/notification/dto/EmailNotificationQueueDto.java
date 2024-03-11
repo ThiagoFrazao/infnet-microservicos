@@ -1,11 +1,11 @@
-package br.edu.infnet.notification.dto.queue;
+package br.edu.infnet.notification.dto;
 
 import lombok.Getter;
 
 import java.io.Serializable;
 
 @Getter
-public class PasswordRecoverQueueDto implements Serializable {
+public class EmailNotificationQueueDto implements Serializable {
 
     private String email;
 

@@ -13,56 +13,30 @@ import org.springframework.context.annotation.Configuration;
 @EnableRabbit
 public class RabbitMqConfig {
 
-    @Value("${rabbit.recover_password.queue.name}")
-    private String recoverPasswordQueue;
+    @Value("${rabbit.email_notification.queue.name}")
+    private String emailNotificationQueue;
 
-    @Value("${rabbit.recover_password.exchange.name}")
-    private String recoverPasswordExchange;
+    @Value("${rabbit.email_notification.exchange.name}")
+    private String emailNotificationExchange;
 
-    @Value("${rabbit.recover_password.routing.key}")
-    private String recoverPasswordRoutingKey;
-
-    @Value("${rabbit.notify_order.queue.name}")
-    private String notifyOrderQueue;
-
-    @Value("${rabbit.notify_order.exchange.name}")
-    private String notifyOrderExchange;
-
-    @Value("${rabbit.notify_order.routing.key}")
-    private String notifyOrderRoutingKey;
+    @Value("${rabbit.email_notification.routing.key}")
+    private String emailNotificationRoutingKey;
 
     @Bean
     public Queue recoverPasswordQueue() {
-        return new Queue(this.recoverPasswordQueue);
+        return new Queue(this.emailNotificationQueue);
     }
 
     @Bean
     public TopicExchange recoverPasswordTopicExchange() {
-        return new TopicExchange(this.recoverPasswordExchange);
+        return new TopicExchange(this.emailNotificationExchange);
     }
 
     @Bean
     public Binding recoverPasswordBinding() {
         return BindingBuilder.bind(recoverPasswordQueue())
                 .to(recoverPasswordTopicExchange())
-                .with(this.recoverPasswordRoutingKey);
-    }
-
-    @Bean
-    public Queue notifyOrderQueue() {
-        return new Queue(this.notifyOrderQueue);
-    }
-
-    @Bean
-    public TopicExchange notifyOrderTopicExchange() {
-        return new TopicExchange(this.notifyOrderExchange);
-    }
-
-    @Bean
-    public Binding notifyOrderBinding() {
-        return BindingBuilder.bind(notifyOrderQueue())
-                .to(notifyOrderTopicExchange())
-                .with(this.notifyOrderRoutingKey);
+                .with(this.emailNotificationRoutingKey);
     }
 
 }
