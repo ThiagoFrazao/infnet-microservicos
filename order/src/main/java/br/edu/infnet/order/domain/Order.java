@@ -16,8 +16,9 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
-@Table(name = "order")
+@Table(name = "\"order\"")
 @Entity
 @Getter
 @Setter
@@ -29,6 +30,9 @@ public class Order {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    private UUID uuid;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 
@@ -37,6 +41,10 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDateTime dataCriacao;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TipoPagamento tipoPagamento;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

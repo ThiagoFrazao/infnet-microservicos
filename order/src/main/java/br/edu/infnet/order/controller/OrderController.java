@@ -4,7 +4,7 @@ import br.edu.infnet.order.domain.Order;
 import br.edu.infnet.order.domain.OrderStatus;
 import br.edu.infnet.order.dto.request.OrderRequestDto;
 import br.edu.infnet.order.dto.response.OrderResponseDto;
-import br.edu.infnet.order.services.impl.user.OrderCrudServiceImpl;
+import br.edu.infnet.order.services.impl.order.OrderCrudServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,13 +27,13 @@ public class OrderController {
         this.service = service;
     }
 
-    @PostMapping
+    @PostMapping("/new")
     public ResponseEntity<OrderResponseDto> criarOrder(@RequestBody OrderRequestDto requestBody) {
         return ResponseEntity.ok(this.service.criarOrdem(requestBody));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrderResponseDto> atualizarOrdem(@PathVariable Long id, @RequestParam(name = "status") OrderStatus status) {
+    public ResponseEntity<OrderResponseDto> atualizarOrdem(@PathVariable String id, @RequestParam(name = "status") OrderStatus status) {
         return ResponseEntity.ok(this.service.atualizarOrdem(status, id));
     }
 

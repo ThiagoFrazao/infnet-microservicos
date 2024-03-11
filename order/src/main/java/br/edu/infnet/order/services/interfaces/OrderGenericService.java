@@ -12,7 +12,7 @@ public interface OrderGenericService extends GenericCrudService<Order> {
 
     OrderResponseDto criarOrdem(OrderRequestDto usuarioExistente);
 
-    OrderResponseDto atualizarOrdem(OrderStatus novoStatus, Long idOrdem);
+    OrderResponseDto atualizarOrdem(OrderStatus novoStatus, String idOrdem);
 
     List<OrderResponseDto> recuperarTodasOrdensUsuario(String emailUsuario);
 

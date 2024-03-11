@@ -1,4 +1,4 @@
-package br.edu.infnet.order.dto.api;
+package br.edu.infnet.order.dto.api.products;
 
 import lombok.Getter;
 
