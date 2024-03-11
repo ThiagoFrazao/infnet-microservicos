@@ -1,7 +1,7 @@
 package br.edu.infnet.authorization.services.impl.user;
 
 import br.edu.infnet.authorization.domain.Usuario;
-import br.edu.infnet.authorization.dto.request.PasswordRecoverQueueDto;
+import br.edu.infnet.authorization.dto.queue.EmailNotificationQueueDto;
 import br.edu.infnet.authorization.dto.request.UsuarioRequest;
 import br.edu.infnet.authorization.repository.UsuarioRepository;
 import br.edu.infnet.authorization.services.impl.GenericCrudServiceImpl;
@@ -109,7 +109,7 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
                 this.rabbitTemplate.convertAndSend(
                         this.exchange,
                         this.routingKey,
-                        this.objectMapper.writeValueAsString(new PasswordRecoverQueueDto(email, this.gerarConteudoRecuperacaoSenha(usuario), this.gerarTituloRecuperacaoSenha(usuario))));
+                        this.objectMapper.writeValueAsString(new EmailNotificationQueueDto(email, this.gerarConteudoRecuperacaoSenha(usuario), this.gerarTituloRecuperacaoSenha(usuario))));
             }
         } catch (Exception e) {
             //FIXME: implementar exception

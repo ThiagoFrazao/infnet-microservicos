@@ -36,4 +36,8 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private RoleUsuario role;
 
+    public RoleUsuario getRole() {
+        return role == null ? RoleUsuario.GUEST : this.role;
+    }
+
 }
