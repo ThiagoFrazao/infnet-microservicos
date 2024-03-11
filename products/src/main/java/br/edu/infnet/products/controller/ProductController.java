@@ -25,9 +25,9 @@ public class ProductController {
         this.service = service;
     }
 
-    @PostMapping
-    public ResponseEntity<Produto> salvarNovoProduto(@RequestBody Produto requestBody) {
-        return ResponseEntity.ok(this.service.save(requestBody));
+    @PostMapping("/new")
+    public ResponseEntity<List<Produto>> salvarNovoProduto(@RequestBody List<Produto> requestBody) {
+        return ResponseEntity.ok(this.service.saveAll(requestBody));
     }
 
     @PutMapping

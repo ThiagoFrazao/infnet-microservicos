@@ -1,6 +1,6 @@
-package br.edu.infnet.products.services.impl;
+package br.edu.infnet.shopping.services.impl;
 
-import br.edu.infnet.products.services.GenericCrudService;
+import br.edu.infnet.shopping.services.GenericCrudService;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -24,8 +24,13 @@ public abstract class GenericCrudServiceImpl<T, I, R extends JpaRepository<T, I>
     }
 
     @Override
-    public List<T> saveAll(List<T> entityList) {
-        return this.repository.saveAll(entityList);
+    public void update(T entity) {
+        this.repository.save(entity);
+    }
+
+    @Override
+    public T save(T entity) {
+        return this.repository.save(entity);
     }
 
     @Override

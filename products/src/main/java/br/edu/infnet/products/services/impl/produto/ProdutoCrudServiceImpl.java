@@ -28,7 +28,7 @@ public class ProdutoCrudServiceImpl extends GenericCrudServiceImpl<Produto, Long
         } else {
             produto.setValor(novoProduto.getValor());
             produto.setNome(novoProduto.getNome());
-            return this.save(novoProduto);
+            return this.repository.save(produto);
         }
     }
 
