@@ -20,12 +20,17 @@ public class EmailServiceImpl {
     }
 
     public void sendEmail(String conteudo, String email, String titulo) {
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(this.userEmail);
-        msg.setSubject(titulo);
-        msg.setText(conteudo);
-        msg.setTo(email);
-        this.emailSender.send(msg);
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setFrom(this.userEmail);
+            msg.setSubject(titulo);
+            msg.setText(conteudo);
+            msg.setTo(email);
+            this.emailSender.send(msg);
+        } catch (Exception e) {
+            log.error("Falha ao enviar email para {}", email);
+        }
+
     }
 
 }
