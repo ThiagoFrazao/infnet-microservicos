@@ -195,3 +195,7 @@ buildNumber.properties
 # JDT-specific (Eclipse Java Development Tools)
 
 # End of https://www.toptal.com/developers/gitignore/api/maven
+/.mvn/wrapper/maven-wrapper.properties
+/mvnw
+/mvnw.cmd
+/src/test/java/br/edu/infnet/shopping/PaymentApplicationTests.java
