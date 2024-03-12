@@ -54,13 +54,13 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
     private String hostNameApiProduto;
 
     @Value("${payment.api.path}")
-    private String pathApiPayment;
+    private String paymentPath;
 
     @Value("${payment.api.port_number}")
-    private Integer portNumberApiPayment;
+    private Integer paymentPortNumber;
 
     @Value("${payment.api.host_name}")
-    private String hostNameApiPayment;
+    private String paymenthostName;
 
     @Value("${userinfo.api.path}")
     private String pathApiInfoUsuario;
@@ -112,9 +112,9 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
             final ResponseEntity<PaymentResponseDto> produtos = this.webClient.post()
                     .uri(uriBuilder -> uriBuilder
                             .scheme(CURRENT_SCHEME)
-                            .host(this.hostNameApiPayment)
-                            .port(this.portNumberApiPayment)
-                            .path(this.pathApiPayment)
+                            .host(this.paymenthostName)
+                            .port(this.paymentPortNumber)
+                            .path(this.paymentPath)
                             .build())
                     .bodyValue(new PaymentRequestDto(novaOrderm))
                     .exchangeToMono(response -> response.toEntity(PaymentResponseDto.class)
@@ -154,7 +154,7 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
                             .scheme(CURRENT_SCHEME)
                             .host(this.hostNameApiInfoUsuario)
                             .port(this.portNumberApiInfoUsuario)
-                            .path(this.pathApiInfoUsuario + "/email/" + emailUsuario)
+                            .path(this.pathApiInfoUsuario + "/email/%s".formatted(emailUsuario))
                             .build())
                     .exchangeToMono(response -> {
                         if (HttpStatus.OK.equals(response.statusCode())) {
@@ -216,7 +216,7 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
 
     private List<InfoProdutos> recuperarInfoProdutos(List<Long> idProdutos) {
         try {
-            final ResponseEntity<List> produtos = this.webClient.get()
+            final List<InfoProdutos> produtos = this.webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .scheme(CURRENT_SCHEME)
                             .host(this.hostNameApiProduto)
@@ -226,13 +226,13 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
                             .build())
                     .exchangeToMono(response -> {
                         if (HttpStatus.OK.equals(response.statusCode())) {
-                            return response.toEntity(List.class);
+                            return response.bodyToFlux(InfoProdutos.class).collectList();
                         } else {
                             throw new RuntimeException("Falha ao recuperar informacoes do produto");
                         }
                     }).block();
-            if(produtos.getBody() != null) {
-                return (List<InfoProdutos>) produtos.getBody();
+            if(produtos != null) {
+                return produtos;
             } else {
                 throw new RuntimeException("Nao foi retornada informacao dos produtos");
             }
