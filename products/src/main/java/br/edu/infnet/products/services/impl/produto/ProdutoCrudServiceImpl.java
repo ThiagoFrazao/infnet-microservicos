@@ -1,7 +1,7 @@
 package br.edu.infnet.products.services.impl.produto;
 
 import br.edu.infnet.products.domain.Produto;
-import br.edu.infnet.products.exception.FalhaBancoDadosException;
+import br.edu.infnet.products.exception.BusinessException;
 import br.edu.infnet.products.repository.ProdutoRepository;
 import br.edu.infnet.products.services.impl.GenericCrudServiceImpl;
 import br.edu.infnet.products.services.interfaces.ProdutoGenericService;
@@ -23,8 +23,9 @@ public class ProdutoCrudServiceImpl extends GenericCrudServiceImpl<Produto, Long
     public Produto atualizarProduto(Produto novoProduto) {
         final Produto produto = this.findById(novoProduto.getId());
         if(produto == null) {
-            throw new FalhaBancoDadosException(
-                    "Falha ao atualizar produto. Produto ID %s nao encontrado".formatted(novoProduto.getId()));
+            throw new BusinessException(
+                    "Falha ao atualizar produto. Produto ID %s nao encontrado".formatted(novoProduto.getId()),
+                    "Verifique o numero do produto antes de tentar uma nova atualizacao.");
         } else {
             produto.setValor(novoProduto.getValor());
             produto.setNome(novoProduto.getNome());
