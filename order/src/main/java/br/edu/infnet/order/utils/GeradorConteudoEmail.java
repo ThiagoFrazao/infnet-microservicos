@@ -3,6 +3,7 @@ package br.edu.infnet.order.utils;
 
 import br.edu.infnet.order.domain.OrderStatus;
 import br.edu.infnet.order.dto.response.OrderResponseDto;
+import br.edu.infnet.order.exceptions.BusinessException;
 
 import java.util.UUID;
 
@@ -129,22 +130,15 @@ public enum GeradorConteudoEmail {
     }
 
     public static GeradorConteudoEmail getGeradorFromOrderStatus(OrderStatus status) {
-        switch (status) {
-            case PROCESSING_PAYMENT, PAID:
-                return GeradorConteudoEmail.CRIACAO_ORDEM;
-            case REJECTED_PAYMENT:
-                return GeradorConteudoEmail.REJEICAO_PAGAMENTO_ORDER;
-            case FAILED_PAYMENT:
-                return GeradorConteudoEmail.FALHA_PAGAMENTO_ORDER;
-            case PROCESSING_DELIVERY, PROCESSING_RETURN, RETURNED, CANCELED:
-                return GeradorConteudoEmail.ATUALIZACAO_ORDEM;
-            case DELIVERED:
-                return GeradorConteudoEmail.ORDEM_ENTREGUE;
-            case SHOPPING_CART:
-                return GeradorConteudoEmail.SHOOPING_CART;
-            default:
-                throw new RuntimeException("Tipo de order nao mapeado. %s".formatted(status.name()));
-        }
+        return switch (status) {
+            case PROCESSING_PAYMENT, PAID -> GeradorConteudoEmail.CRIACAO_ORDEM;
+            case REJECTED_PAYMENT -> GeradorConteudoEmail.REJEICAO_PAGAMENTO_ORDER;
+            case FAILED_PAYMENT -> GeradorConteudoEmail.FALHA_PAGAMENTO_ORDER;
+            case PROCESSING_DELIVERY, PROCESSING_RETURN, RETURNED, CANCELED -> GeradorConteudoEmail.ATUALIZACAO_ORDEM;
+            case DELIVERED -> GeradorConteudoEmail.ORDEM_ENTREGUE;
+            case SHOPPING_CART -> GeradorConteudoEmail.SHOOPING_CART;
+            default -> throw new BusinessException("Tipo de order nao mapeado. %s".formatted(status.name()));
+        };
 
     }
 

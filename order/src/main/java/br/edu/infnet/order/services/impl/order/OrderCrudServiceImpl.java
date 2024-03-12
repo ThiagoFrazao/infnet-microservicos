@@ -11,6 +11,9 @@ import br.edu.infnet.order.dto.queue.EmailNotificationQueueDto;
 import br.edu.infnet.order.dto.request.OrderRequestDto;
 import br.edu.infnet.order.dto.response.OrderItemRepository;
 import br.edu.infnet.order.dto.response.OrderResponseDto;
+import br.edu.infnet.order.exceptions.ApiServiceConnectionException;
+import br.edu.infnet.order.exceptions.BusinessException;
+import br.edu.infnet.order.exceptions.DatabaseConnectionException;
 import br.edu.infnet.order.repository.OrderRepository;
 import br.edu.infnet.order.services.impl.GenericCrudServiceImpl;
 import br.edu.infnet.order.services.interfaces.OrderGenericService;
@@ -103,7 +106,7 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
         } catch (Exception e) {
             log.error("Falha ao criar nova orderm para o usuario {}", ordemRequest.getEmailUsuario(), e);
             this.enviarNotificacaoEmail(response, GeradorConteudoEmail.FALHA_CRIACAO_ORDEM);
-            throw new RuntimeException("Falha ao criar nova ordem");
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
         }
     }
 
@@ -120,7 +123,7 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
                     .exchangeToMono(response -> response.toEntity(PaymentResponseDto.class)
                     ).block();
 
-            if(produtos.getBody() != null && produtos.getBody().getStatus() != null) {
+            if(produtos != null && produtos.getBody() != null && produtos.getBody().getStatus() != null) {
                 return OrderStatus.recoverStatusFromPaymentStatus(produtos.getBody().getStatus());
             } else {
                 return OrderStatus.FAILED_PAYMENT;
@@ -129,7 +132,6 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
             log.error("Falha ao processar pagamento. Sera considerado como pagamento falho", e);
             return OrderStatus.FAILED_PAYMENT;
         }
-
     }
 
     private void enviarNotificacaoEmail(OrderResponseDto response, GeradorConteudoEmail geradorConteudo) {
@@ -160,13 +162,15 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
                         if (HttpStatus.OK.equals(response.statusCode())) {
                             return response.toEntity(UsuarioResponse.class);
                         } else {
-                            throw new RuntimeException("Falha ao recuperar informacoes do produto");
+                            log.error("Falha ao recuperar informacoes do usuario. Status: " + response.statusCode().value());
+                            throw new ApiServiceConnectionException("AuthService", this.pathApiInfoUsuario);
                         }
                     }).block();
-            if(produtos.getBody() != null && StringUtils.isNotBlank(produtos.getBody().getNome())) {
+            if(produtos != null && produtos.getBody() != null && StringUtils.isNotBlank(produtos.getBody().getNome())) {
                 return StringUtils.trimToEmpty(produtos.getBody().getNome());
             } else {
-                throw new RuntimeException("Nao foi retornada informacao dos produtos");
+                log.error("Nao foi retornada informacoes do usuario.");
+                return StringUtils.EMPTY;
             }
         } catch (Exception e) {
             log.error("Falha ao recuperar informacoes dos produtos. Sera retornada lista vazia", e);
@@ -185,12 +189,12 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
                 final List<Long> idProdutos = order.getItems().stream().map(OrderItem::getIdProduto).toList();
                 return new OrderResponseDto(order, this.recuperarInfoProdutos(idProdutos));
             } else {
-                throw new RuntimeException("Ordem %s nao encontrada".formatted(idOrdem));
+                throw new BusinessException("Ordem %s nao encontrada".formatted(idOrdem));
             }
         } catch (Exception e) {
             log.error("Falha ao atualizar ordem {} para o status {}", idOrdem, novoStatus.name(), e);
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
         }
-        return null;
     }
 
     @Override
@@ -210,7 +214,7 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
             }
         } catch (Exception e) {
             log.error("Falha ao recuperar ordens para o usuario {}", emailUsuario, e);
-            throw new RuntimeException("Nao foi possivel recuperar as ordens do usuario %s".formatted(emailUsuario));
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
         }
     }
 
@@ -228,13 +232,14 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
                         if (HttpStatus.OK.equals(response.statusCode())) {
                             return response.bodyToFlux(InfoProdutos.class).collectList();
                         } else {
-                            throw new RuntimeException("Falha ao recuperar informacoes do produto");
+                            throw new ApiServiceConnectionException("ProdutosService", this.pathApiProduto);
                         }
                     }).block();
             if(produtos != null) {
                 return produtos;
             } else {
-                throw new RuntimeException("Nao foi retornada informacao dos produtos");
+                log.error("Nao foi retornada informacao dos produtos informados: " + StringUtils.join(idProdutos, " , "));
+                return new ArrayList<>();
             }
         } catch (Exception e) {
             log.error("Falha ao recuperar informacoes dos produtos. Sera retornada lista vazia", e);
