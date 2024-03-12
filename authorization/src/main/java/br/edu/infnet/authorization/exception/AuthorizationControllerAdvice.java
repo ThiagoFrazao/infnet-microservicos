@@ -10,6 +10,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ControllerAdvice
 public class AuthorizationControllerAdvice {
 
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public AuthorizationError businessExceptionHandler(BusinessException exception) {
+        return new AuthorizationError(exception.getMessage(), ErrorType.RECUPERAVEL);
+    }
+
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public AuthorizationError genericExceptionHandler(Exception exception) {

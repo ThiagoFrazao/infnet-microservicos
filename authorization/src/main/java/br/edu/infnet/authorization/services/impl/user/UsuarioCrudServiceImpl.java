@@ -3,6 +3,9 @@ package br.edu.infnet.authorization.services.impl.user;
 import br.edu.infnet.authorization.domain.Usuario;
 import br.edu.infnet.authorization.dto.queue.EmailNotificationQueueDto;
 import br.edu.infnet.authorization.dto.request.UsuarioRequest;
+import br.edu.infnet.authorization.exception.BusinessException;
+import br.edu.infnet.authorization.exception.DatabaseConnectionException;
+import br.edu.infnet.authorization.exception.QueueServiceConnectionException;
 import br.edu.infnet.authorization.repository.UsuarioRepository;
 import br.edu.infnet.authorization.services.impl.GenericCrudServiceImpl;
 import br.edu.infnet.authorization.services.interfaces.UsuarioGenericService;
@@ -40,8 +43,8 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
         try {
             final Usuario usuario = this.repository.findUsuarioByEmailIgnoreCase(usuarioExistente.getEmail());
             if(usuario == null) {
-                //FIXME: implementar exception
-                throw new RuntimeException("Usuario nao existente para realizar atualizacao");
+                log.error("Usuario {} nao encontrado no banco de dados.", usuarioExistente.getEmail());
+                throw new BusinessException("Usuario nao existente para realizar atualizacao");
             } else {
                 if(this.passwordEncoder.matches(usuarioExistente.getSenha(), usuario.getSenha())) {
                     usuario.setSenha(this.passwordEncoder.encode(usuarioExistente.getSenha()));
@@ -50,12 +53,15 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
                     usuario.setEmail(usuarioExistente.getEmail());
                     this.repository.save(usuario);
                 } else {
-                    throw new RuntimeException("Senha invalida. Tente novamente.");
+                    log.error("Senha invalida para usuario {}", usuarioExistente.getEmail());
+                    throw new BusinessException("Senha invalida. Tente novamente.");
                 }
             }
+        } catch (BusinessException e) {
+          throw e;
         } catch (Exception e) {
-            //FIXME: implementar exception
-            throw new RuntimeException();
+            log.error("Falha ao conectar no banco de dados para salvar novo usuario {}", usuarioExistente.getEmail(), e);
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
         }
     }
 
@@ -69,8 +75,8 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
             usuario.setSenha(this.passwordEncoder.encode(novoUsuario.getSenha()));
             return this.repository.save(usuario);
         } catch (Exception e) {
-            //FIXME: implementar exception
-            throw new RuntimeException("ALTERAR");
+            log.error("Falha ao conectar no banco de dados para salvar novo usuario {}", novoUsuario.getEmail(), e);
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
         }
     }
 
@@ -79,8 +85,8 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
         try {
             return this.repository.findUsuarioByEmailIgnoreCase(email);
         } catch (Exception e) {
-            //FIXME: implementar exception
-            throw new RuntimeException("ALTERAR");
+            log.error("Falha ao conectar no banco de dados para recuperar usuario atraves do email {}", email, e);
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
         }
     }
 
@@ -89,13 +95,15 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
         try {
             final Usuario usuario = this.repository.findUsuarioByEmailIgnoreCase(email);
             if(usuario == null) {
-                throw new RuntimeException("Usuario nao existente para email %s".formatted(email));
+                throw new BusinessException("Usuario nao existente para email %s".formatted(email));
             } else {
                 this.repository.deleteById(usuario.getId());
             }
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            //FIXME: implementar exception
-            throw new RuntimeException("ALTERAR");
+            log.error("Falha ao conectar no banco de dados para deletar email {}.", email, e);
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
         }
     }
 
@@ -104,16 +112,18 @@ public class UsuarioCrudServiceImpl extends GenericCrudServiceImpl<Usuario, Long
         try {
             final Usuario usuario = this.repository.findUsuarioByEmailIgnoreCase(StringUtils.trimToNull(email));
             if(usuario == null) {
-                throw new RuntimeException("Usuario nao encontrado para email %s".formatted(email));
+                log.error("Usuario {} nao encontrado no banco de dados.", email);
+                throw new BusinessException("Usuario nao encontrado para email %s".formatted(email));
             } else {
                 this.rabbitTemplate.convertAndSend(
                         this.exchange,
                         this.routingKey,
                         this.objectMapper.writeValueAsString(new EmailNotificationQueueDto(email, this.gerarConteudoRecuperacaoSenha(usuario), this.gerarTituloRecuperacaoSenha(usuario))));
             }
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            //FIXME: implementar exception
-            throw new RuntimeException("ALTERAR");
+            throw new QueueServiceConnectionException(this.routingKey, e);
         }
     }
 
