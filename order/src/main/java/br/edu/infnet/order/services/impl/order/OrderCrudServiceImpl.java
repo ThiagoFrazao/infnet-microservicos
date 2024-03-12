@@ -103,6 +103,8 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
             response = new OrderResponseDto(novaOrderm, this.recuperarInfoProdutos(ordemRequest.getIdProdutos()));
             this.enviarNotificacaoEmail(response, GeradorConteudoEmail.getGeradorFromOrderStatus(response.getOrderStatus()));
             return response;
+        } catch (BusinessException e) {
+          throw e;
         } catch (Exception e) {
             log.error("Falha ao criar nova orderm para o usuario {}", ordemRequest.getEmailUsuario(), e);
             this.enviarNotificacaoEmail(response, GeradorConteudoEmail.FALHA_CRIACAO_ORDEM);
@@ -191,6 +193,8 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
             } else {
                 throw new BusinessException("Ordem %s nao encontrada".formatted(idOrdem));
             }
+        } catch (BusinessException e) {
+          throw e;
         } catch (Exception e) {
             log.error("Falha ao atualizar ordem {} para o status {}", idOrdem, novoStatus.name(), e);
             throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
