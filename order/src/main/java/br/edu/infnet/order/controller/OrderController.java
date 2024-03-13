@@ -6,6 +6,7 @@ import br.edu.infnet.order.dto.request.OrderRequestDto;
 import br.edu.infnet.order.dto.response.OrderResponseDto;
 import br.edu.infnet.order.services.impl.order.OrderCrudServiceImpl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,13 +38,18 @@ public class OrderController {
         return ResponseEntity.ok(this.service.atualizarOrdem(status, id));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<OrderResponseDto> removerProdutosOrdem(@PathVariable String id, @RequestParam(name = "produtos") List<Long> produtos) {
+        return ResponseEntity.ok(this.service.removerProdutoOrdem(produtos, id));
+    }
+
     @GetMapping("/{email}")
     public ResponseEntity<List<OrderResponseDto>> recuperarOrdensUsuario(@PathVariable String email) {
         return ResponseEntity.ok(this.service.recuperarTodasOrdensUsuario(email));
     }
     @GetMapping("/{id}")
-    public ResponseEntity<Order> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(this.service.findById(id));
+    public ResponseEntity<Order> findByUuid(@PathVariable String id) {
+        return ResponseEntity.ok(this.service.findByUuid(id));
     }
 
 }

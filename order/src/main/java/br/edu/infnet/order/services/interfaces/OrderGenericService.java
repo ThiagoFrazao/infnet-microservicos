@@ -14,6 +14,9 @@ public interface OrderGenericService extends GenericCrudService<Order> {
 
     OrderResponseDto atualizarOrdem(OrderStatus novoStatus, String idOrdem);
 
+    OrderResponseDto removerProdutoOrdem(List<Long> removerProduto, String idOrdem);
+
     List<OrderResponseDto> recuperarTodasOrdensUsuario(String emailUsuario);
 
+    Order findByUuid(String id);
 }

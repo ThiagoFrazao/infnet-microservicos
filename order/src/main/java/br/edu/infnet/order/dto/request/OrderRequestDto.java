@@ -1,7 +1,7 @@
 package br.edu.infnet.order.dto.request;
 
-import br.edu.infnet.order.domain.OrderStatus;
 import br.edu.infnet.order.domain.TipoPagamento;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 
 import java.util.List;
@@ -15,6 +15,11 @@ public class OrderRequestDto {
 
     private TipoPagamento tipoPagamento;
 
-    private OrderStatus status;
+    private RequestStatus status;
+
+    @JsonIgnore
+    public boolean isRequisicaoPagamento() {
+        return RequestStatus.REQUEST_PAYMENT.equals(this.status);
+    }
 
 }

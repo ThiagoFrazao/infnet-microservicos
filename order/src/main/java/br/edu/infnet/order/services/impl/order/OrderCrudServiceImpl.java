@@ -91,17 +91,13 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
     public OrderResponseDto criarOrdem(OrderRequestDto ordemRequest) {
         OrderResponseDto response = null;
         try {
-            Order novaOrderm = new Order();
-            novaOrderm.setEmailUsuario(ordemRequest.getEmailUsuario());
-            novaOrderm.setDataCriacao(LocalDateTime.now());
-            novaOrderm.setItems(ordemRequest.getIdProdutos().stream().map(item -> new OrderItem(item, novaOrderm)).toList());
-            novaOrderm.setUuid(UUID.randomUUID());
-            novaOrderm.setTipoPagamento(ordemRequest.getTipoPagamento());
-            novaOrderm.setStatus(this.solicitarPagamentoOrdem(novaOrderm));
+            Order novaOrderm = this.gerarNovaOrder(ordemRequest);
             this.repository.saveAndFlush(novaOrderm);
             this.itemRepository.saveAll(novaOrderm.getItems());
             response = new OrderResponseDto(novaOrderm, this.recuperarInfoProdutos(ordemRequest.getIdProdutos()));
-            this.enviarNotificacaoEmail(response, GeradorConteudoEmail.getGeradorFromOrderStatus(response.getOrderStatus()));
+            if(ordemRequest.isRequisicaoPagamento()) {
+                this.enviarNotificacaoEmail(response, GeradorConteudoEmail.getGeradorFromOrderStatus(response.getOrderStatus()));
+            }
             return response;
         } catch (BusinessException e) {
           throw e;
@@ -110,6 +106,85 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
             this.enviarNotificacaoEmail(response, GeradorConteudoEmail.FALHA_CRIACAO_ORDEM);
             throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
         }
+    }
+
+    @Override
+    public OrderResponseDto atualizarOrdem(OrderStatus novoStatus, String idOrdem) {
+        OrderResponseDto response = null;
+        try {
+            final Order order = this.repository.findByUuid(UUID.fromString(idOrdem));
+            if(order != null) {
+                order.setStatus(novoStatus);
+                this.repository.save(order);
+                final List<Long> idProdutos = order.getItems().stream().map(OrderItem::getIdProduto).toList();
+                response = new OrderResponseDto(order, this.recuperarInfoProdutos(idProdutos));
+                this.enviarNotificacaoEmail(response, GeradorConteudoEmail.getGeradorFromOrderStatus(novoStatus));
+                return response;
+            } else {
+                throw new BusinessException("Ordem %s nao encontrada".formatted(idOrdem));
+            }
+        } catch (BusinessException e) {
+          throw e;
+        } catch (Exception e) {
+            log.error("Falha ao atualizar ordem {} para o status {}", idOrdem, novoStatus.name(), e);
+            this.enviarNotificacaoEmail(response, GeradorConteudoEmail.FALHA_ATUALIZACAO_ORDEM);
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
+        }
+    }
+
+    @Override
+    public OrderResponseDto removerProdutoOrdem(List<Long> idProdutoRemocao, String idOrdem) {
+        OrderResponseDto response = null;
+        try {
+            final Order order = this.repository.findByUuid(UUID.fromString(idOrdem));
+            if(order != null && order.getItems() != null) {
+                if(OrderStatus.SHOPPING_CART.equals(order.getStatus())) {
+                    List<OrderItem> novaItemList = order.getItems().stream().filter(item -> !idProdutoRemocao.contains(item.getIdProduto())).toList();
+                    order.setItems(novaItemList);
+                    this.repository.saveAndFlush(order);
+                    this.itemRepository.saveAll(novaItemList);
+                    response = new OrderResponseDto(order, this.recuperarInfoProdutos(novaItemList.stream().map(OrderItem::getIdProduto).toList()));
+                    this.enviarNotificacaoEmail(response, GeradorConteudoEmail.ATUALIZACAO_ORDEM);
+                    return response;
+                } else {
+                    throw new BusinessException("Ordem %s nao esta mais como carrinho de compras. Seus produtos nao podem ser alterados.".formatted(idOrdem));
+                }
+            } else {
+                throw new BusinessException("Ordem %s nao encontrada".formatted(idOrdem));
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Falha ao remover produtos da ordem {}", idOrdem, e);
+            this.enviarNotificacaoEmail(response, GeradorConteudoEmail.FALHA_ATUALIZACAO_ORDEM);
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
+        }
+    }
+
+    @Override
+    public List<OrderResponseDto> recuperarTodasOrdensUsuario(String emailUsuario) {
+        try {
+            final List<Order> ordersUsuario = this.repository.findAllByEmailUsuarioIgnoreCase(emailUsuario);
+            if(ordersUsuario.isEmpty()) {
+                log.debug("Nao foram encontradas ordens para o email {}", emailUsuario);
+                return new ArrayList<>();
+            } else {
+                List<OrderResponseDto> response = new ArrayList<>();
+                for(Order order : ordersUsuario) {
+                    List<Long> idProdutos = order.getItems().stream().map(OrderItem::getIdProduto).toList();
+                    response.add(new OrderResponseDto(order, this.recuperarInfoProdutos(idProdutos)));
+                }
+                return response;
+            }
+        } catch (Exception e) {
+            log.error("Falha ao recuperar ordens para o usuario {}", emailUsuario, e);
+            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
+        }
+    }
+
+    @Override
+    public Order findByUuid(String id) {
+        return this.repository.findByUuid(UUID.fromString(id));
     }
 
     private OrderStatus solicitarPagamentoOrdem(Order novaOrderm) {
@@ -180,46 +255,19 @@ public class OrderCrudServiceImpl extends GenericCrudServiceImpl<Order, Long, Or
         }
     }
 
-
-    @Override
-    public OrderResponseDto atualizarOrdem(OrderStatus novoStatus, String idOrdem) {
-        try {
-            final Order order = this.repository.findByUuid(UUID.fromString(idOrdem));
-            if(order != null) {
-                order.setStatus(novoStatus);
-                this.repository.save(order);
-                final List<Long> idProdutos = order.getItems().stream().map(OrderItem::getIdProduto).toList();
-                return new OrderResponseDto(order, this.recuperarInfoProdutos(idProdutos));
-            } else {
-                throw new BusinessException("Ordem %s nao encontrada".formatted(idOrdem));
-            }
-        } catch (BusinessException e) {
-          throw e;
-        } catch (Exception e) {
-            log.error("Falha ao atualizar ordem {} para o status {}", idOrdem, novoStatus.name(), e);
-            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
+    private Order gerarNovaOrder(OrderRequestDto ordemRequest) {
+        Order novaOrderm = new Order();
+        novaOrderm.setEmailUsuario(ordemRequest.getEmailUsuario());
+        novaOrderm.setDataCriacao(LocalDateTime.now());
+        novaOrderm.setItems(ordemRequest.getIdProdutos().stream().map(item -> new OrderItem(item, novaOrderm)).toList());
+        novaOrderm.setUuid(UUID.randomUUID());
+        novaOrderm.setTipoPagamento(ordemRequest.getTipoPagamento());
+        if(ordemRequest.isRequisicaoPagamento()) {
+            novaOrderm.setStatus(this.solicitarPagamentoOrdem(novaOrderm));
+        } else {
+            novaOrderm.setStatus(OrderStatus.SHOPPING_CART);
         }
-    }
-
-    @Override
-    public List<OrderResponseDto> recuperarTodasOrdensUsuario(String emailUsuario) {
-        try {
-            final List<Order> ordersUsuario = this.repository.findAllByEmailUsuarioIgnoreCase(emailUsuario);
-            if(ordersUsuario.isEmpty()) {
-                log.debug("Nao foram encontradas ordens para o email {}", emailUsuario);
-                return new ArrayList<>();
-            } else {
-                List<OrderResponseDto> response = new ArrayList<>();
-                for(Order order : ordersUsuario) {
-                    List<Long> idProdutos = order.getItems().stream().map(OrderItem::getIdProduto).toList();
-                    response.add(new OrderResponseDto(order, this.recuperarInfoProdutos(idProdutos)));
-                }
-                return response;
-            }
-        } catch (Exception e) {
-            log.error("Falha ao recuperar ordens para o usuario {}", emailUsuario, e);
-            throw new DatabaseConnectionException(this.repository.getClass().getName(), e);
-        }
+        return novaOrderm;
     }
 
     private List<InfoProdutos> recuperarInfoProdutos(List<Long> idProdutos) {
