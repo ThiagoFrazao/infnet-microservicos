@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-produtos
+  labels:
+    app: frazzzao-produtos
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: frazzzao-produtos
+  template:
+    metadata:
+      name: frazzzao-produtos
+      labels:
+        app: frazzzao-produtos
+    spec:
+      containers:
+        - name: frazzzao-produtos
+          image: frazzzao/infnet:produtos-1.0
+          ports:
+            - containerPort: 8084
+          livenessProbe:
+            httpGet:
+              path: /probe/products/health
+              port: 8084
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /probe/products/ready
+              port: 8084
+            initialDelaySeconds: 5
+            periodSeconds: 10
