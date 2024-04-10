@@ -1,7 +1,11 @@
 package br.edu.infnet.products.controller;
 
 import br.edu.infnet.products.domain.Produto;
+import br.edu.infnet.products.dto.MetricType;
 import br.edu.infnet.products.services.impl.produto.ProdutoCrudServiceImpl;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping
@@ -21,8 +26,11 @@ public class ProductController {
 
     private final ProdutoCrudServiceImpl service;
 
-    public ProductController(ProdutoCrudServiceImpl service) {
+    private final MeterRegistry meterRegistry;
+
+    public ProductController(ProdutoCrudServiceImpl service, MeterRegistry meterRegistry) {
         this.service = service;
+        this.meterRegistry = meterRegistry;
     }
 
     @PostMapping("/new")
@@ -48,6 +56,37 @@ public class ProductController {
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         this.service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/metrics/error")
+    public ResponseEntity<Void> getErrorMetrics() {
+        try {
+            final Map<MetricType, Double> metricasService = this.service.recuperarMetricas();
+            metricasService.forEach((i,j) -> {
+                Counter counter = Counter.builder("ERROR_"+i.name())
+                        .tag(i.name(), "produtos")
+                        .description("Quantidade de erros %s para produtos".formatted(i.name()))
+                        .register(this.meterRegistry);
+
+                counter.increment(j);
+            });
+            return  ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/metrics/quantidade")
+    public ResponseEntity<Void>  getQntProdutosMetric() {
+        try {
+            final List<Produto> produtos = this.service.findAll();
+            Gauge.builder("quantidade_produtos_banco", produtos::size)
+                    .description("Quantidade de produtos cadastrados na base")
+                    .register(meterRegistry);
+            return  ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 }
