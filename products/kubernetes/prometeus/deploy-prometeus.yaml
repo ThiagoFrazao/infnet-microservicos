@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  deploy-prometeus
+  labels:
+    name: deploy-prometeus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      type: prometeus-pod
+  template:
+    metadata:
+      name: prometeus-pod
+      labels:
+        type: prometeus-pod
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image:  prom/prometheus
+          imagePullPolicy: IfNotPresent
+          name:  prometeus-con
+          volumeMounts:
+            - name: prometeus-pvc
+              mountPath: /data
+            - name:  prome-config
+              mountPath: ~/projetos/pessoal/infnet/infnet-microservicos/products/kubernetes/prometeus/prometheus.yml
+              subPath: prometheus.yml
+          ports:
+            - containerPort: 9090
+      volumes:
+        - name: prometeus-pvc
+          persistentVolumeClaim:
+            claimName: prometeus-pvc
+        - name:  prome-config
+          configMap:
+            name: prometeus-configmap
+            defaultMode: 0744
