@@ -8,17 +8,17 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
   - job_name: "produtos-actuator"
-    metrics_path: "/actuator/prometheus"
+    metrics_path: "/api/products/actuator/prometheus"
     scrape_interval: 10s
     static_configs:
-      - targets: ["frazzzao-produtos-service:8084/api/products"]
+      - targets: ["host.docker.internal:8084"]
   - job_name: "produtos-errors"
-    metrics_path: "/metrics/error"
+    metrics_path: "/api/products/metrics/error"
     scrape_interval: 10s
     static_configs:
-      - targets: [ "frazzzao-produtos-service:8084/api/products" ]
+      - targets: [ "host.docker.internal:8084" ]
   - job_name: "produtos-quantidade"
-    metrics_path: "/metrics/quantidade"
+    metrics_path: "/api/products/metrics/quantidade"
     scrape_interval: 60s
     static_configs:
-      - targets: [ "frazzzao-produtos-service:8084/api/products" ]
+      - targets: [ "host.docker.internal:8084" ]

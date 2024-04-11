@@ -15,7 +15,6 @@ spec:
       labels:
         app: frazzzao-produtos
     spec:
-      automountServiceAccountToken: false
       containers:
         - name: frazzzao-produtos
           image: frazzzao/infnet:produtos-1.0

@@ -1,25 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name:  deploy-prometeus
+  name: deploy-prometeus
   labels:
-    name: deploy-prometeus
+    app: prometeus-pod
 spec:
   replicas: 1
   selector:
     matchLabels:
-      type: prometeus-pod
+      app: prometeus-pod
   template:
     metadata:
       name: prometeus-pod
       labels:
-        type: prometeus-pod
+        app: prometeus-pod
     spec:
-      automountServiceAccountToken: false
       containers:
         - image:  prom/prometheus
           imagePullPolicy: IfNotPresent
-          name:  prometeus-con
+          name:  prometeus-pod
           volumeMounts:
             - name: prometeus-pvc
               mountPath: /data

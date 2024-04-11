@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-jmeter
+  labels:
+    app: alpine-jmeter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alpine-jmeter
+  template:
+    metadata:
+      name: alpine-jmeter
+      labels:
+        app: alpine-jmeter
+    spec:
+      containers:
+        - name: alpine-jmeter
+          image: alpine/jmeter
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8089
+              protocol: TCP
