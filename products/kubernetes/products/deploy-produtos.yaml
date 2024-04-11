@@ -15,6 +15,7 @@ spec:
       labels:
         app: frazzzao-produtos
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: frazzzao-produtos
           image: frazzzao/infnet:produtos-1.0
@@ -22,13 +23,13 @@ spec:
             - containerPort: 8084
           livenessProbe:
             httpGet:
-              path: /probe/products/health
+              path: /api/products/probe/health
               port: 8084
             initialDelaySeconds: 15
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /probe/products/ready
+              path: /api/products/probe/ready
               port: 8084
             initialDelaySeconds: 5
             periodSeconds: 10
