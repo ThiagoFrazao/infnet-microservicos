@@ -70,7 +70,7 @@ public class ProductController {
 
                 counter.increment(j);
             });
-            return  ResponseEntity.noContent().build();
+            return  ResponseEntity.ok(null);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -83,7 +83,7 @@ public class ProductController {
             Gauge.builder("quantidade_produtos_banco", produtos::size)
                     .description("Quantidade de produtos cadastrados na base")
                     .register(meterRegistry);
-            return  ResponseEntity.noContent().build();
+            return  ResponseEntity.ok(null);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
