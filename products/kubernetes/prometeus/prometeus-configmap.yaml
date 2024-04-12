@@ -17,14 +17,14 @@ data:
         metrics_path: "/actuator/prometheus"
         scrape_interval: 10s
         static_configs:
-          - targets: ["frazzzao-produtos-service:8084/api/products"]
+          - targets: ["10.244.0.53:8084/api/products"]
       - job_name: "produtos-errors"
         metrics_path: "/metrics/error"
         scrape_interval: 10s
         static_configs:
-          - targets: [ "frazzzao-produtos-service:8084/api/products" ]
+          - targets: [ "10.244.0.53:8084/api/products" ]
       - job_name: "produtos-quantidade"
         metrics_path: "/metrics/quantidade"
         scrape_interval: 60s
         static_configs:
-          - targets: [ "frazzzao-produtos-service:8084/api/products" ]
+          - targets: [ "10.244.0.53:8084/api/products" ]
