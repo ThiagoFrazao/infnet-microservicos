@@ -22,3 +22,5 @@ spec:
           ports:
             - containerPort: 6379
               protocol: TCP
+
+
